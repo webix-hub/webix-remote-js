@@ -1,0 +1,10 @@
+{
+  "parserOptions": {
+    "ecmaVersion": 6
+  },
+  "globals": {
+  },
+  "env": {
+    "node": true
+  }
+}
