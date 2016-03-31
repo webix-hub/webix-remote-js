@@ -1,6 +1,9 @@
 Webix Remote - Nodejs
 ---------------------
 
+
+[![Build Status](https://travis-ci.org/webix-hub/webix-remote-js.svg?branch=master)](https://travis-ci.org/webix-hub/webix-remote-js)
+
 Simple RPC for NodeJS and Webix UI
 
 
