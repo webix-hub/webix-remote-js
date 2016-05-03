@@ -122,7 +122,7 @@ describe("Webix Remote", ()=>{
 
 			return remote.callHandler(
 				req_mock({ key:"123", data:pack, multicall:true }, { csrfkey:"123" }),
-				res_mock({ data:[3, { __webix_remote_error: true },12] }, 200)
+				res_mock({ data:[3, { __webix_remote_error: "Error" },12] }, 200)
 			);
 		});
 	});
