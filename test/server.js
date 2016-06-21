@@ -198,15 +198,37 @@ describe("Webix Remote", ()=>{
 			);
 		})
 
-		it("context in method points to the request", () => {
+		it("$req in method points to the request", () => {
 			remote.config.ignoreError = true;
 
 			var req = req_mock(
-				{ name:"runD", key:"123" },
+				{ name:"runD", key:"123", data:"[1]" },
 				{ csrfkey: "123" }
 			);
-			remote.setMethod("runD", function(){
-				expect(this).to.equal(req);
+			remote.setMethod("runD", function(a, $req){
+				expect(a).to.equal(1);
+				expect($req).to.equal(req);
+				return 4;
+			});
+
+			return remote.callHandler(
+				req,
+				res_mock({ data:4 }, 200)
+			);
+		})
+
+		it("$req in method with optional parameters", () => {
+			remote.config.ignoreError = true;
+
+			var req = req_mock(
+				{ name:"runD", key:"123", data:"[1]" },
+				{ csrfkey: "123" }
+			);
+			remote.setMethod("runD", function(a,b,c,$req){
+				expect(a).to.equal(1);
+				expect(b).to.equal(this.undefined);
+				expect(c).to.equal(this.undefined);
+				expect($req).to.equal(req);
 				return 4;
 			});
 
