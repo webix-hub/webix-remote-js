@@ -44,7 +44,7 @@ describe("Webix Remote", ()=>{
 		it("Must generate API on request", ()=>{
 			remote.apiHandler(
 				req_mock(),
-				res_mock("webix.remote({\"user\":1,\"test\":1,\"obj\":{\"a\":1,\"c\":1}});")
+				res_mock("webix.remote(/*api*/{\"$vars\":{\"user\":1},\"test\":1,\"obj\":{\"a\":1,\"c\":1}}/*api*/);")
 			);
 		});
 		it("Must support setMethod and setData API", ()=>{
@@ -67,47 +67,27 @@ describe("Webix Remote", ()=>{
 				res_mock({ error:'CSRF detected' }, 500)
 			).catch((e)=> expect(e).to.be.equal('CSRF detected'));
 		});
-		it("Must ignore empty call", ()=>{
-			return remote.callHandler(
-				req_mock({ key:"123"}, { csrfkey:"123" }),
-				res_mock({ error:'Invalid method name' }, 500)
-			).catch((e)=> expect(e).to.be.equal('Invalid method name'));
-		});
-		it("Must ignore invalid method name in single-call mode", ()=>{
-			return remote.callHandler(
-				req_mock({ key:"123", name:"aaa"}, { csrfkey:"123" }),
-				res_mock({ error:'Method not found: aaa' }, 500)
-			).catch((e)=> expect(e.message).to.be.equal('Method not found: aaa'));
-		});
 		it("Must ignore invalid method name in multi-call mode", ()=>{
 			var pack = JSON.stringify([
-				{ name:"test", data:[1,2] },
-				{ name:"obj.b", data:[3,4] }
+				{ name:"test", args:[1,2] },
+				{ name:"obj.b", args:[3,4] }
 			]);
 
 			return remote.callHandler(
-				req_mock({ key:"123", data:pack, multicall:true }, { csrfkey:"123" }),
+				req_mock({ key:"123", payload:pack }, { csrfkey:"123" }),
 				res_mock({ error: "Method not found: obj.b" }, 500)
 			).catch((e)=> expect(e.message).to.be.equal('Method not found: obj.b'));
-		});
-		it("Must run method in single-call mode", ()=>{
-			remote.config.ignoreError = true;
-
-			return remote.callHandler(
-				req_mock({ key:"123", name:"test", data:"[1,2]"}, { csrfkey:"123" }),
-				res_mock({ data:3 }, 200)
-			);
 		});
 		it("Must run method in multi-call mode", ()=>{
 			remote.config.ignoreError = true;
 
 			var pack = JSON.stringify([
-				{ name:"test", data:[1,2] },
-				{ name:"obj.a", data:[3,4] }
+				{ name:"test", args:[1,2] },
+				{ name:"obj.a", args:[3,4] }
 			]);
 
 			return remote.callHandler(
-				req_mock({ key:"123", data:pack, multicall:true }, { csrfkey:"123" }),
+				req_mock({ key:"123", payload:pack }, { csrfkey:"123" }),
 				res_mock({ data:[3,12] }, 200)
 			);
 		});
@@ -115,13 +95,13 @@ describe("Webix Remote", ()=>{
 			remote.config.ignoreError = true;
 
 			var pack = JSON.stringify([
-				{ name:"test", data:[1,2] },
-				{ name:"obj.c", data:[3,4] },
-				{ name:"obj.a", data:[3,4] }
+				{ name:"test", args:[1,2] },
+				{ name:"obj.c", args:[3,4] },
+				{ name:"obj.a", args:[3,4] }
 			]);
 
 			return remote.callHandler(
-				req_mock({ key:"123", data:pack, multicall:true }, { csrfkey:"123" }),
+				req_mock({ key:"123", payload:pack }, { csrfkey:"123" }),
 				res_mock({ data:[3, { __webix_remote_error: "Error" },12] }, 200)
 			);
 		});
@@ -138,7 +118,7 @@ describe("Webix Remote", ()=>{
 			remote.config.ignoreError = false;
 			return remote.callHandler(
 				req_mock(
-					{ name:"runB", key:"123" },
+					{ payload:JSON.stringify([{ name:"runB" }]), key:"123" },
 					{ csrfkey: "123" }
 				),
 				res_mock({ error:"Method not found: runB"}, 500)
@@ -148,7 +128,7 @@ describe("Webix Remote", ()=>{
 			remote.config.ignoreError = true;
 			return remote.callHandler(
 				req_mock(
-					{ name:"runC", key:"123" },
+					{ payload:JSON.stringify([{ name:"runC" }]), key:"123" },
 					{ csrfkey: "123" }
 				),
 				res_mock({ error:"Method not found: runC"}, 500)
@@ -159,18 +139,18 @@ describe("Webix Remote", ()=>{
 			remote.config.ignoreError = true;
 			return remote.callHandler(
 				req_mock(
-					{ name:"runB", key:"123" },
+					{ payload:JSON.stringify([{ name:"runB" }]), key:"123" },
 					{ csrfkey: "123", user:{ id:"1" }}
 				),
-				res_mock({ data:2}, 200)
+				res_mock({ data: [2]}, 200)
 			);
 		});
 		it("blocks admin methods for logged users", () => {
 			remote.config.ignoreError = true;
 			return remote.callHandler(
 				req_mock(
-					{ name:"runC", key:"123", user:{ id:"1" } },
-					{ csrfkey: "123" }
+					{ payload:JSON.stringify([{ name:"runC" }]), key:"123" },
+					{ csrfkey: "123", user:{ id:"1" }}
 				),
 				res_mock({ error:"Method not found: runC"}, 500)
 			).catch((e) => expect(e.message).to.equal("Method not found: runC"));
@@ -179,10 +159,10 @@ describe("Webix Remote", ()=>{
 			remote.config.ignoreError = true;
 			return remote.callHandler(
 				req_mock(
-					{ name:"runC", key:"123" },
+					{ payload:JSON.stringify([{ name:"runC" }]), key:"123" },
 					{ csrfkey: "123", user:{ id:"1", role:"admin" }}
 				),
-				res_mock({ data:3}, 200)
+				res_mock({ data: [3]}, 200)
 			);
 		});
 
@@ -191,10 +171,10 @@ describe("Webix Remote", ()=>{
 
 			return remote.callHandler(
 				req_mock(
-					{ name:"runA", key:"123" },
+					{ payload:JSON.stringify([{ name:"runA" }]), key:"123" },
 					{ csrfkey: "123" }
 				),
-				res_mock({ data:1 }, 200)
+				res_mock({ data: [1] }, 200)
 			);
 		})
 
@@ -202,7 +182,7 @@ describe("Webix Remote", ()=>{
 			remote.config.ignoreError = true;
 
 			var req = req_mock(
-				{ name:"runD", key:"123", data:"[1]" },
+				{ payload:JSON.stringify([{ name:"runD", args:[1] }]), key:"123"},
 				{ csrfkey: "123" }
 			);
 			remote.setMethod("runD", function(a, $req){
@@ -213,7 +193,7 @@ describe("Webix Remote", ()=>{
 
 			return remote.callHandler(
 				req,
-				res_mock({ data:4 }, 200)
+				res_mock({ data: [4] }, 200)
 			);
 		})
 
@@ -221,7 +201,7 @@ describe("Webix Remote", ()=>{
 			remote.config.ignoreError = true;
 
 			var req = req_mock(
-				{ name:"runD", key:"123", data:"[1]" },
+				{ payload:JSON.stringify([{ name:"runD", args:[1] }]), key:"123" },
 				{ csrfkey: "123" }
 			);
 			remote.setMethod("runD", function(a,b,c,$req){
@@ -234,7 +214,7 @@ describe("Webix Remote", ()=>{
 
 			return remote.callHandler(
 				req,
-				res_mock({ data:4 }, 200)
+				res_mock({ data: [4] }, 200)
 			);
 		})
 
