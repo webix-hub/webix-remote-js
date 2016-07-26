@@ -8,12 +8,12 @@ describe("Webix Remote", ()=>{
 		it("Must generate empty API by default", ()=>{
 			var server = rpc();
 			var api = server.generateApi();
-			expect(api).to.be.deep.equal({});
+			expect(api).to.be.deep.equal({ $vars:{} });
 		});
 		it("Must provide csrf key", ()=>{
 			var server = rpc();
 			var api = server.generateApi(null, "123");
-			expect(api).to.be.deep.equal({ $key: "123" });
+			expect(api).to.be.deep.equal({ $vars:{}, $key: "123" });
 		});
 		it("Must provide method map", ()=>{
 			var server = rpc();
@@ -28,7 +28,7 @@ describe("Webix Remote", ()=>{
 			});
 
 			var api = server.generateApi();
-			expect(api).to.be.deep.equal({ testA:1, testB:{
+			expect(api).to.be.deep.equal({ $vars:{}, testA:1, testB:{
 				one:1, two: { a: 1 }
 			}});
 		});
@@ -39,7 +39,7 @@ describe("Webix Remote", ()=>{
 			server.setData("c", function(a){ return a; });
 
 			var api = server.generateApi("111");
-			expect(api).to.be.deep.equal({ a: "123", b:"321", c:"111"});
+			expect(api).to.be.deep.equal({ $vars:{ a: "123", b:"321", c:"111" }});
 		});
 	});
 
