@@ -1,6 +1,6 @@
 {
   "name": "webix-remote",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Webix Remote - simple RPC for Webix UI",
   "main": "index.js",
   "scripts": {
